@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {padding:0; margin:0;}
+        html, body {height: 100%;}
+
+        .main-col {
+            display:block;
+            height: 100%;
+            float:left;
+        }
+        #control-panel {
+            width:15%;
+        }
+
+        #grid {
+            width:85%;
+        }
+    </style>
+</head>
+<body>
+    <script type="application/dart" src="example.dart"></script>
+    <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
+    <script src="packages/browser/dart.js"></script>
+
+    <div id="control-panel" class="main-col">
+        <h2>Control Panel</h2>
+        <button id="run">run</button>
+        <button id="step">step</button>
+        <button id="stop">stop</button>
+    </div>
+    <svg id="grid" class="main-col"></svg>
+</body>
+</html>

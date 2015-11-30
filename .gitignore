@@ -1,0 +1,6 @@
+.idea
+.packages
+pubspec.lock
+
+packages
+web/packages
