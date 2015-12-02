@@ -10,23 +10,26 @@ class Grid {
   final int rows;
   final int cols;
   final num cellRadius;
-  final CellFactory cellFactory;
-  final CellNeighborStrategy cellNeighborStrategy;
 
   List<List<Cell>> _cells = <List<Cell>>[];
   Map<Cell, List> _neighbors = <Cell, List<Cell>>{};
 
   /// Constructor to initialize a [rows] x [col] grid of cells.
-  Grid(this.rows, this.cols, this.cellRadius, this.cellFactory,
-      this.cellNeighborStrategy);
+  Grid(this.rows, this.cols, this.cellRadius);
 
   /// Returns a future that completes when the grid is fully initialized.
-  Future init() async {
-    _createCells();
-    _computeCellNeighbors();
+  Future init(
+      CellFactory cellFactory,
+      CellNeighborStrategy cellNeighborStrategy) async {
+    _createCells(cellFactory);
+    _computeCellNeighbors(cellNeighborStrategy);
   }
 
-  void _createCells() {
+  get cells => _cells;
+
+  get neighbors => _neighbors;
+
+  void _createCells(CellFactory cellFactory) {
     Orientation orientation = Orientation.DOWN;
     for (int y=0; y < rows; y++) {
       _cells.add(<Cell>[]);
@@ -39,7 +42,7 @@ class Grid {
     }
   }
 
-  void _computeCellNeighbors() {
+  void _computeCellNeighbors(CellNeighborStrategy cellNeighborStrategy) {
     List<Point> neighborPos;
     for (int i = 0; i < _cells.length; i++) {
       for (int j = 0; j < _cells[i].length; j++) {
@@ -54,8 +57,4 @@ class Grid {
       }
     }
   }
-
-  get cells => _cells;
-
-  get neighbors => _neighbors;
 }

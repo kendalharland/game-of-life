@@ -6,10 +6,12 @@ import 'package:gol/cell.dart';
 import 'package:gol/grid.dart';
 import 'package:gol/rule.dart';
 import 'package:gol/cell_types/equilateral_triangle.dart';
+import 'package:gol/cell_types/square.dart';
 import 'package:gol/example/example_rules.dart';
 
 // Globals because I r gud programar.
-Element host;
+SvgElement host;
+Point origin;
 Grid grid;
 Duration delay = const Duration(milliseconds: 30);
 Timer runTimer;
@@ -17,10 +19,10 @@ final Map<Cell, Element> cellToElement = <Cell, Element>{};
 final Map<Element, Cell> elementToCell = <Element, Cell>{};
 
 /// The set of rules
-Map<Rule> rules = <Rule>{
-  'onIf1OffIf3': onIf1OffIf3,
-  'onIf2NeighborsOn': onIf2NeighborsOn,
-  'onIfOneNeighborOn': onIfOneNeighborOn
+Map<String, Rule> rules = <String, Rule>{
+  'onIf1OnAndOff': onIf1OnAndOff,
+  'onIf2On': onIf2On,
+  'onIf1OnOffIf3On': onIf1OnOffIf3On,
 };
 Rule selectedRule = rules.values.first;
 
@@ -42,7 +44,7 @@ void clearGrid(_) {
   for (int i=0; i < grid.cells.length; i++) {
     for (int j=0; j < grid.cells[i].length; j++) {
       grid.cells[i][j].state = CellState.OFF;
-      drawCell(grid.cells[i][j]);
+      recolorCell(grid.cells[i][j]);
     }
   }
 }
@@ -58,10 +60,13 @@ void drawCellCenter(Cell cell) {
   host.append(c);
 }
 
-void drawCell(Cell cell) {
-  var vertices = cell.vertices;
-  var d = vertices.fold("M${vertices.last.x} ${vertices.last.y}",
-      (v, next) => v + " L${next.x} ${next.y}");
+void drawCell(Cell cell, CellFactory cellFactory) {
+  var v = cellFactory
+      .computeVertices(cell.center, grid.cellRadius)
+      .map((Point vertex) => vertex += origin);
+  var d = v.fold("M${v.last.x} ${v.last.y}",
+      (vs, next) => vs + " L${next.x} ${next.y}");
+
   var p = new PathElement()
     ..setAttribute("class", "hexoutline")
     ..setAttribute("d", d)
@@ -130,22 +135,19 @@ void swapCellState(MouseEvent e) {
   }
 
   cell.state = cell.state == CellState.ON ? CellState.OFF : CellState.ON;
-  (e.target as Element).remove();
-  elementToCell.remove(e.target);
-  cellToElement.remove(cell);
-  drawCell(cell);
+  recolorCell(cell);
 }
 
 void main() {
   const int rows = 80;
-  const int cols = 101;
+  const int cols = 100;
   const int cellRadius = 5;
-  host = querySelector("#grid");
+  origin = new Point(cellRadius, cellRadius);
+  host = querySelector("#grid") as SvgElement;
 
-  CellNeighborStrategy cellNeighborStrategy =
-      new EquilateralTriangleNeighborStrategy();
-  CellFactory cellFactory = new EquilateralTriangleCellFactory();
-  grid = new Grid(rows, cols, cellRadius, cellFactory, cellNeighborStrategy);
+  CellNeighborStrategy cellNeighborStrategy = new SquareNeighborStrategy();
+  CellFactory cellFactory = new SquareCellFactory();
+  grid = new Grid(rows, cols, cellRadius);
 
   host.onClick.listen(swapCellState);
 
@@ -158,11 +160,11 @@ void main() {
 
   // Load grid
   print("Computing grid...");
-  grid.init().then((_) {
+  grid.init(cellFactory, cellNeighborStrategy).then((_) {
     print("Rendering grid...");
     for (int i=0; i < grid.cells.length; i++) {
       for (int j=0; j < grid.cells[i].length; j++) {
-        drawCell(grid.cells[i][j]);
+        drawCell(grid.cells[i][j], cellFactory);
       }
     }
   });

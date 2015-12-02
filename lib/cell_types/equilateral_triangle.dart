@@ -3,6 +3,8 @@ library gol.cell_types.equilateral_triangle;
 import 'package:gol/cell.dart';
 import 'dart:math' show Point, PI, sin, cos;
 
+/// [CellNeighborStrategy] that returns the coordinates of the grid neighbors of
+/// an equilateral triangle.
 class EquilateralTriangleNeighborStrategy implements CellNeighborStrategy {
   List<Point> computeNeighbors(Cell cell) {
     if (cell.orientation == Orientation.UP) {
@@ -25,7 +27,7 @@ class EquilateralTriangleNeighborStrategy implements CellNeighborStrategy {
 class EquilateralTriangleCellFactory implements CellFactory {
   Cell createCell(Orientation orientation, int x, int y, int radius) {
     Point center = _computeCenter(orientation, x, y, radius);
-    List<Point> vertices = _computeVertices(orientation, center, radius);
+    List<Point> vertices = computeVertices(orientation, center, radius);
     return new Cell(orientation, center, vertices, x, y);
   }
 
@@ -40,7 +42,7 @@ class EquilateralTriangleCellFactory implements CellFactory {
 
   /// Computes the vertices of a cell with the specified [orientation], [center]
   /// and [radius].
-  static List<Point> _computeVertices(orientation, center, radius) {
+  List<Point> computeVertices(orientation, center, radius) {
     List<Point> vertices;
     if (orientation == Orientation.UP) {
       vertices = <Point>[
