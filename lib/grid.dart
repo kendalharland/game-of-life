@@ -22,7 +22,7 @@ class Grid implements GridModel, GridClickListener {
 
   Stream<CellChangeEvent> get onCellChange => _model.onCellChange;
 
-  Stream<ClickEvent> get onCLick => _clickListener.onClick;
+  Stream<ClickEvent> get onClick => _clickListener.onClick;
 
   Future initialize() => _model.initialize();
 

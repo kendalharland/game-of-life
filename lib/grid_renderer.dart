@@ -7,7 +7,7 @@ import 'package:gol/cell.dart';
 
 /// Renders grids inside an host element.
 class GridRenderer implements Disposable {
-  final CellRenderer _cellRenderer;
+  final _CellRenderer _cellRenderer;
   final _subscriptions = <StreamSubscription>[];
 
   GridRenderer(SvgElement host, Layout layout)
