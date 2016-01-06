@@ -1,19 +1,46 @@
-library gol.cell_renderer;
+library gol.grid_renderer;
 
 import 'dart:html';
 import 'dart:svg' hide Point;
 
 import 'package:gol/cell.dart';
 
-/// Draws a cell inside A host element.
-class CellRenderer {
-  final Layout layout;
-  final SvgElement host;
+/// Renders grids inside an host element.
+class GridRenderer implements Disposable {
+  final CellRenderer _cellRenderer;
+  final _subscriptions = <StreamSubscription>[];
 
+  GridRenderer(SvgElement host, Layout layout)
+      : _cellRenderer = new _CellRenderer(host, layout);
+
+  Future renderGrid(Grid grid) async {
+    grid.forEach((row) {
+      row.forEach(_cellRenderer.renderCell);
+    });
+    
+    _subscriptions.add(grid.onCellChange.listen((CellChangeEvent e) {
+      e.cells.forEach(gridRenderer.renderCell);
+    }));
+  }
+
+  void renderCell(Cell cell) => _cellRenderer.renderCell(cell);
+
+  void renderCellCenter(Cell cell) => _cellRenderer.renderCellCenter(cell);
+
+  void dispose() {
+    _subscriptions.forEach((s) {
+      s.cancel();
+    });
+  }
+}
+
+class _CellRenderer {
+  final Layout _layout;
+  final SvgElement _host;
   final _cellToElement = <Cell, Element>{};
   final _elementToCell = <Element, Cell>{};
 
-  CellRenderer({this.host, this.layout});
+  _CellRenderer(this._host, this._layout);
 
   /// Draws [cell] inside [host].
   void renderCell(Cell cell) {
@@ -32,7 +59,7 @@ class CellRenderer {
       ..setAttribute("fill", "transparent")
       ..setAttribute("cx", "${cell.center.x}")
       ..setAttribute("cy", "${cell.center.y}");
-    host.append(center);
+    _host.append(center);
   }
 
   void _getCellColor(Cell cell) =>
@@ -46,7 +73,7 @@ class CellRenderer {
   }
 
   void _renderNewCell(Cell cell) {
-    var vertices = layout.getVertices(cell.x, cell.y);
+    var vertices = _layout.getVertices(cell.x, cell.y);
     var path = new PathElement();
     var d = vertices.fold("M${vertices.last.x} ${vertices.last.y}",
         (ds, vertex) => "$ds L${vertex.x} ${vertex.y}");
@@ -55,7 +82,7 @@ class CellRenderer {
       ..setAttribute("class", "hexoutline")
       ..setAttribute("d", d)
       ..setAttribute("stroke", "Gray");
-    host.append(path);
+    _host.append(path);
     _linkCellToElement(cell, path);
     _updateRenderedCell(cell);
   }
@@ -65,20 +92,5 @@ class CellRenderer {
       throw "cannot updated non-existent cell $cell";
     }
     _cellToElement[cell].setAttribute("fill", _getCellColor(cell));
-  }
-}
-
-/// Draws a grid inside a host element.
-class GridRenderer {
-  CellRenderer _cellRenderer;
-
-  GridRenderer({SvgElement host, Layout layout}) {
-    _cellRenderer = new CellRenderer(host: host, layout: layout);
-  }
-
-  Future renderGrid(Grid grid) async {
-    grid.cells.forEach((row) {
-      row.forEach(_cellRenderer.renderCell);
-    });
   }
 }

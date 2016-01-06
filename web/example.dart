@@ -3,16 +3,18 @@ import 'dart:html';
 import 'dart:svg' hide Point;
 
 import 'package:gol/cell.dart';
-import 'package:gol/cell_renderer.dart';
+import 'package:gol/grid_renderer.dart';
 import 'package:gol/grid.dart';
+import 'package:gol/behaviors/toggle_cell_on_click.dart';
 import 'package:gol/rule.dart';
 import 'package:gol/layouts/equilateral_triangle.dart';
 //import 'package:gol/layouts/square.dart';
 import 'package:gol/example/example_rules.dart';
 
+
+/// Todo(kj)
 Timer runTimer;
-final Map<Cell, Element> cellToElement = <Cell, Element>{};
-final Map<Element, Cell> elementToCell = <Element, Cell>{};
+Rule selectedRule = rules.values.first;
 
 /// The set of rules
 Map<String, Rule> rules = <String, Rule>{
@@ -21,19 +23,6 @@ Map<String, Rule> rules = <String, Rule>{
   'onIf1OnOffIf3On': onIf1OnOffIf3On,
 };
 
-Rule selectedRule = rules.values.first;
-
-void loadRules() {
-  Element rulesHost = document.querySelector("#rules");
-  rules.forEach((key, value) {
-    rulesHost.append(new OptionElement(
-        data: key, value: key, selected: rules[key] == selectedRule));
-  });
-  rulesHost.onChange.listen((e) {
-    String ruleKey = (e.target as SelectElement).selectedOptions.first.value;
-    selectedRule = rules[ruleKey];
-  });
-}
 
 void step(_) {
   for (int i = 0; i < grid.cells.length; i++) {
@@ -83,34 +72,50 @@ void timeRun(_) {
 
 void swapCellState(MouseEvent e) {
   Cell cell = elementToCell[e.target];
-  
+
   if (cell == null) return;
 
   cell.state = cell.state == CellState.ON ? CellState.OFF : CellState.ON;
   recolorCell(cell);
 }
 
-void attachClickListeners(Element host) {
+
+/// Todo(kjharland): Some of these callbacks need to be moved to a class
+void loadControlPanel() {
   querySelector("#run").onClick.listen(timeRun);
   querySelector("#clear").onClick.listen(clearGrid);
   querySelector("#stop").onClick.listen((_) => runTimer?.cancel());
   querySelector("#step").onClick.listen(step);
 }
 
-void main() {
-  final layout = new EquilateralTriangleLayout(cellRadius: 10);
-  final config = new GridConfiguration(rows: 20, cols: 20, layout: layout);
-  final grid = new Grid(config);
-  final host = querySelector("#grid") as SvgElement;
-  final gridRenderer = new GridRenderer(host: host, layout: layout);
-
-  attachClickListeners(host);
-  //loadRules();
-
-  host.onClick.listen(swapCellState);
-  print("Initializing grid...");
-  grid.initialize().then((_) {
-    print("Rendering grid...");
-    gridRenderer.renderGrid(grid);
+void loadRules() {
+  final rulesHost = document.querySelector("#rules");
+  
+  rules.forEach((key, value) {
+    rulesHost.append(new OptionElement(
+        data: key, value: key, selected: rules[key] == selectedRule));
   });
+  
+  rulesHost.onChange.listen((e) {
+    final select = e.target as SelectElement;
+    selectedRule = rules[select.selectedOptions.first.value];
+  });
+}
+
+void bootstrap() {
+  loadControlPanel();
+  loadRules();
+}
+
+Future main() async {
+  final host = querySelector("#grid") as SvgElement;
+  final grid = new Grid(20, 20, host);
+  final gridRenderer =
+      new GridRenderer(host, new EquilateralTriangleLayout(cellRadius: 10));
+
+  await grid.initialize();
+  await gridRenderer.renderGrid(grid);
+  grid.addBehavior(new ToggleCellOnClick());
+
+  bootstrap();
 }
