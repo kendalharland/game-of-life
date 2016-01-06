@@ -52,6 +52,7 @@ class EquilateralTriangleLayout implements Layout {
         .map((point) => point + _origin);
   }
 
+  // Todo(kjharland): cache neighbor computations?
   List<Point> getNeighbors(Cell cell) {
     if (cell.orientation == Orientation.UP) {
       return [
