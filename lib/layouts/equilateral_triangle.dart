@@ -8,11 +8,10 @@ import 'package:gol/layout.dart';
 /// A [Layout] implementation for equilateral triangles.
 class EquilateralTriangleLayout implements Layout {
   final int cellRadius;
-  Point _origin;
+  final Point _origin;
 
-  EquilateralTriangleLayout({this.cellRadius}) {
+  EquilateralTriangleLayout({this.cellRadius}) :
     _origin = new Point(cellRadius, cellRadius);
-  }
 
   Orientation getOrientation(int row, int col) =>
       (row % 2 == col % 2) ? Orientation.DOWN : Orientation.UP;

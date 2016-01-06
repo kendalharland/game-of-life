@@ -5,7 +5,7 @@ abstract class Layout {
   /// The radius of each cell in a [Grid].
   final int cellRadius;
 
-  Layout({this.cellRadius, this.origin});
+  Layout({this.cellRadius});
 
   /// Returns the orientation of the cell at [row] and [col].
   Orientation getOrientation(int row, int col);
